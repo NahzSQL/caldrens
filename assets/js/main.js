@@ -179,7 +179,7 @@
     return ok;
   }
 
-  var inputs = form.querySelectorAll('input, select, textarea');
+  var inputs = form.querySelectorAll('input:not([type="hidden"]):not([name="_honey"]), select, textarea');
   inputs.forEach(function (input) {
     input.addEventListener('blur', function () {
       if (input.value.trim() || fieldWrap(input).classList.contains('has-error')) validate(input);
@@ -215,17 +215,12 @@
     submitBtn.disabled = true;
     submitLabel.textContent = 'Submitting…';
 
-    var endpoint = form.getAttribute('action');
+    // Inquiries are emailed through FormSubmit (see README).
+    var endpoint = form.getAttribute('data-endpoint');
     var done = function () {
       submitBtn.disabled = false;
       submitLabel.textContent = 'Submit Inquiry';
     };
-
-    // Without a configured endpoint the form confirms locally (UI only).
-    if (!endpoint) {
-      setTimeout(function () { done(); showSuccess(); }, 700);
-      return;
-    }
 
     fetch(endpoint, {
       method: 'POST',
@@ -233,7 +228,11 @@
       headers: { Accept: 'application/json' }
     })
       .then(function (res) {
-        if (!res.ok) throw new Error('Request failed');
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok || String(data.success) === 'false') throw new Error('Request failed');
+        });
+      })
+      .then(function () {
         done();
         showSuccess();
       })

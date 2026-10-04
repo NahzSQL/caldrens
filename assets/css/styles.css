@@ -1143,6 +1143,7 @@ h1, h2, h3 {
   gap: 20px;
   padding-top: 8px;
 }
+.form__trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 .form__note { max-width: 40ch; font-size: 0.8125rem; color: var(--muted); }
 .form__status { font-size: 0.875rem; color: #b4232c; }
 .form__status:empty { display: none; }
