@@ -1,0 +1,13 @@
+{
+  "name": "caldrens-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Caldrens Solutions corporate website",
+  "scripts": {
+    "dev": "node scripts/dev-server.js",
+    "start": "node scripts/dev-server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

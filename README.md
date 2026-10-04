@@ -14,7 +14,7 @@ robots.txt
 
 ## Run locally
 
-Open `index.html` in a browser, or serve the folder:
+Run `npm run dev` (Node 18+) and open http://localhost:3000. Set `PORT` to change the port. You can also open `index.html` directly, or serve the folder with any static server:
 
 ```
 python3 -m http.server 8080
