@@ -192,6 +192,17 @@
     });
   });
 
+  function setHidden(name, value) {
+    var field = form.querySelector('input[type="hidden"][name="' + name + '"]');
+    if (!field) {
+      field = document.createElement('input');
+      field.type = 'hidden';
+      field.name = name;
+      form.appendChild(field);
+    }
+    field.value = value;
+  }
+
   function showSuccess() {
     form.hidden = true;
     success.hidden = false;
@@ -222,6 +233,9 @@
       submitLabel.textContent = 'Submit Inquiry';
     };
 
+    var isWeb = /^https?:$/.test(location.protocol);
+    setHidden('_url', location.href);
+
     fetch(endpoint, {
       method: 'POST',
       body: new FormData(form),
@@ -229,18 +243,35 @@
     })
       .then(function (res) {
         return res.json().catch(function () { return {}; }).then(function (data) {
-          if (!res.ok || String(data.success) === 'false') throw new Error('Request failed');
+          if (!res.ok || String(data.success) !== 'true') {
+            throw new Error(data.message || 'HTTP ' + res.status);
+          }
         });
       })
       .then(function () {
         done();
         showSuccess();
       })
-      .catch(function () {
+      .catch(function (err) {
+        if (window.console) console.warn('Inquiry could not be sent in the background:', err.message);
+        if (isWeb) {
+          // Fall back to a standard form post. FormSubmit handles it on its own
+          // page (including first-time activation), then returns the visitor here.
+          setHidden('_next', location.origin + location.pathname + '#inquiry-sent');
+          HTMLFormElement.prototype.submit.call(form);
+          return;
+        }
         done();
         status.textContent = 'We could not submit your inquiry. Please try again in a moment.';
       });
   });
+
+  // Returning from a standard (non-background) form post
+  if (location.hash === '#inquiry-sent') {
+    showSuccess();
+    success.scrollIntoView({ block: 'center' });
+    if (history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+  }
 
   document.querySelector('[data-form-reset]').addEventListener('click', function () {
     form.reset();
