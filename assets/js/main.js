@@ -1,0 +1,286 @@
+/* Caldrens Solutions — site behavior */
+(function () {
+  'use strict';
+
+  var root = document.documentElement;
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Page ready (hero load-in) ---------- */
+  function markReady() { root.classList.add('is-ready'); }
+  var heroImg = document.querySelector('.hero__media img');
+  if (heroImg && !heroImg.complete) {
+    heroImg.addEventListener('load', markReady, { once: true });
+    heroImg.addEventListener('error', markReady, { once: true });
+    setTimeout(markReady, 900); // never hold content back on a slow connection
+  } else {
+    requestAnimationFrame(markReady);
+  }
+
+  /* ---------- Images: fade in when loaded, degrade gracefully on failure ---------- */
+  document.querySelectorAll('.media img').forEach(function (img) {
+    function loaded() { img.classList.add('is-loaded'); }
+    function failed() { img.classList.add('is-missing'); }
+    if (img.complete) {
+      if (img.naturalWidth > 0) loaded(); else failed();
+    } else {
+      img.addEventListener('load', loaded, { once: true });
+      img.addEventListener('error', failed, { once: true });
+    }
+  });
+
+  /* ---------- Sticky header state ---------- */
+  var header = document.querySelector('[data-header]');
+  function onScroll() {
+    header.classList.toggle('is-scrolled', window.scrollY > 24);
+  }
+  onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  /* ---------- Mobile menu ---------- */
+  var toggle = document.querySelector('[data-nav-toggle]');
+  var toggleLabel = document.querySelector('[data-nav-toggle-label]');
+  var menu = document.querySelector('[data-mobile-menu]');
+
+  function setMenu(open) {
+    toggle.setAttribute('aria-expanded', String(open));
+    toggleLabel.textContent = open ? 'Close menu' : 'Open menu';
+    menu.hidden = !open;
+    header.classList.toggle('is-open', open);
+    document.body.classList.toggle('is-locked', open);
+  }
+
+  toggle.addEventListener('click', function () {
+    setMenu(toggle.getAttribute('aria-expanded') !== 'true');
+  });
+  menu.addEventListener('click', function (e) {
+    if (e.target.closest('a')) setMenu(false);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+      setMenu(false);
+      toggle.focus();
+    }
+  });
+  window.matchMedia('(min-width: 1024px)').addEventListener('change', function (mq) {
+    if (mq.matches) setMenu(false);
+  });
+
+  /* ---------- Active nav link ---------- */
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('.primary-nav a'));
+  var sections = navLinks
+    .map(function (a) { return document.querySelector(a.getAttribute('href')); })
+    .filter(Boolean);
+
+  if ('IntersectionObserver' in window && sections.length) {
+    var current = null;
+    var navObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) current = entry.target.id;
+      });
+      navLinks.forEach(function (a) {
+        a.classList.toggle('is-active', a.getAttribute('href') === '#' + current);
+      });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    sections.forEach(function (s) { navObserver.observe(s); });
+  }
+
+  /* ---------- Scroll reveal ---------- */
+  var revealEls = document.querySelectorAll('[data-reveal]');
+
+  // Stagger siblings inside the same grid/list
+  revealEls.forEach(function (el) {
+    var parent = el.parentElement;
+    var siblings = Array.prototype.filter.call(parent.children, function (c) {
+      return c.hasAttribute('data-reveal');
+    });
+    var i = siblings.indexOf(el);
+    if (i > 0) el.style.setProperty('--reveal-delay', Math.min(i * 0.08, 0.4) + 's');
+  });
+
+  if ('IntersectionObserver' in window && !reduceMotion) {
+    var revealObserver = new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    revealEls.forEach(function (el) { revealObserver.observe(el); });
+  } else {
+    revealEls.forEach(function (el) { el.classList.add('is-visible'); });
+  }
+
+  /* ---------- Counters ---------- */
+  var counters = document.querySelectorAll('[data-count]');
+  function formatNumber(n) { return n.toLocaleString('en-US'); }
+
+  function runCounter(el) {
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    var prefix = el.getAttribute('data-prefix') || '';
+    var suffix = el.getAttribute('data-suffix') || '';
+    var duration = 1600;
+    var start = null;
+
+    function frame(ts) {
+      if (!start) start = ts;
+      var p = Math.min((ts - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + formatNumber(Math.round(target * eased)) + suffix;
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  if ('IntersectionObserver' in window && !reduceMotion) {
+    var countObserver = new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          runCounter(entry.target);
+          obs.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.6 });
+    counters.forEach(function (el) { countObserver.observe(el); });
+  }
+
+  /* ---------- CTA topic prefill ---------- */
+  var form = document.querySelector('[data-contact-form]');
+  var topicSelect = document.getElementById('f-topic');
+
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest('[data-topic]');
+    if (!link || !topicSelect) return;
+    var topic = link.getAttribute('data-topic');
+    var match = Array.prototype.find.call(topicSelect.options, function (o) {
+      return o.value === topic || o.text === topic;
+    });
+    if (match) {
+      topicSelect.value = match.value;
+      clearError(topicSelect);
+    }
+    if (link.hasAttribute('data-focus-form')) {
+      e.preventDefault();
+      var nameField = document.getElementById('f-name');
+      nameField.focus({ preventScroll: true });
+      form.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+    }
+  });
+
+  /* ---------- Contact form ---------- */
+  if (!form) return;
+
+  var success = document.querySelector('[data-form-success]');
+  var status = document.querySelector('[data-form-status]');
+  var submitBtn = form.querySelector('[data-submit]');
+  var submitLabel = form.querySelector('[data-submit-label]');
+  var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  var messages = {
+    name: 'Please enter your full name.',
+    company: 'Please enter your company name.',
+    email: 'Please enter a valid work email address.',
+    phone: 'Please enter a valid phone number.',
+    industry: 'Please select your industry.',
+    topic: 'Please tell us what we can help you with.',
+    message: 'Please include a brief message about your requirement.'
+  };
+
+  function fieldWrap(input) { return input.closest('.field'); }
+  function errorEl(input) { return document.getElementById(input.id + '-err'); }
+
+  function setError(input, msg) {
+    fieldWrap(input).classList.add('has-error');
+    input.setAttribute('aria-invalid', 'true');
+    input.setAttribute('aria-describedby', input.id + '-err');
+    errorEl(input).textContent = msg;
+  }
+  function clearError(input) {
+    fieldWrap(input).classList.remove('has-error');
+    input.removeAttribute('aria-invalid');
+    errorEl(input).textContent = '';
+  }
+
+  function validate(input) {
+    var v = input.value.trim();
+    var ok = true;
+    if (input.required && !v) ok = false;
+    else if (input.type === 'email' && v && !EMAIL_RE.test(v)) ok = false;
+    else if (input.type === 'tel' && v && !/^[+()\d\s.\-]{7,}$/.test(v)) ok = false;
+    else if (input.name === 'message' && v.length < 10) ok = false;
+    if (ok) clearError(input); else setError(input, messages[input.name]);
+    return ok;
+  }
+
+  var inputs = form.querySelectorAll('input, select, textarea');
+  inputs.forEach(function (input) {
+    input.addEventListener('blur', function () {
+      if (input.value.trim() || fieldWrap(input).classList.contains('has-error')) validate(input);
+    });
+    input.addEventListener('input', function () {
+      if (fieldWrap(input).classList.contains('has-error')) validate(input);
+    });
+    input.addEventListener('change', function () {
+      if (input.tagName === 'SELECT') validate(input);
+    });
+  });
+
+  function showSuccess() {
+    form.hidden = true;
+    success.hidden = false;
+    success.focus();
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    status.textContent = '';
+
+    var firstInvalid = null;
+    inputs.forEach(function (input) {
+      if (!validate(input) && !firstInvalid) firstInvalid = input;
+    });
+    if (firstInvalid) {
+      firstInvalid.focus();
+      status.textContent = 'Please review the highlighted fields.';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitLabel.textContent = 'Submitting…';
+
+    var endpoint = form.getAttribute('action');
+    var done = function () {
+      submitBtn.disabled = false;
+      submitLabel.textContent = 'Submit Inquiry';
+    };
+
+    // Without a configured endpoint the form confirms locally (UI only).
+    if (!endpoint) {
+      setTimeout(function () { done(); showSuccess(); }, 700);
+      return;
+    }
+
+    fetch(endpoint, {
+      method: 'POST',
+      body: new FormData(form),
+      headers: { Accept: 'application/json' }
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Request failed');
+        done();
+        showSuccess();
+      })
+      .catch(function () {
+        done();
+        status.textContent = 'We could not submit your inquiry. Please try again in a moment.';
+      });
+  });
+
+  document.querySelector('[data-form-reset]').addEventListener('click', function () {
+    form.reset();
+    inputs.forEach(clearError);
+    success.hidden = true;
+    form.hidden = false;
+    document.getElementById('f-name').focus();
+  });
+})();
