@@ -111,39 +111,6 @@
     revealEls.forEach(function (el) { el.classList.add('is-visible'); });
   }
 
-  /* ---------- Counters ---------- */
-  var counters = document.querySelectorAll('[data-count]');
-  function formatNumber(n) { return n.toLocaleString('en-US'); }
-
-  function runCounter(el) {
-    var target = parseInt(el.getAttribute('data-count'), 10);
-    var prefix = el.getAttribute('data-prefix') || '';
-    var suffix = el.getAttribute('data-suffix') || '';
-    var duration = 1600;
-    var start = null;
-
-    function frame(ts) {
-      if (!start) start = ts;
-      var p = Math.min((ts - start) / duration, 1);
-      var eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = prefix + formatNumber(Math.round(target * eased)) + suffix;
-      if (p < 1) requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-  }
-
-  if ('IntersectionObserver' in window && !reduceMotion) {
-    var countObserver = new IntersectionObserver(function (entries, obs) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          runCounter(entry.target);
-          obs.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.6 });
-    counters.forEach(function (el) { countObserver.observe(el); });
-  }
-
   /* ---------- CTA topic prefill ---------- */
   var form = document.querySelector('[data-contact-form]');
   var topicSelect = document.getElementById('f-topic');
