@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
-import { AlertCircle, CalendarCheck, CheckCircle2, Info, LoaderCircle, Mail, Phone, RotateCcw } from "lucide-react";
+import { AlertCircle, CalendarCheck, CheckCircle2, LoaderCircle, Mail, Phone, RotateCcw } from "lucide-react";
 import {
   appointmentRequestSchema,
   contactMethods,
@@ -16,13 +16,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type Status = "idle" | "submitting" | "success" | "demo-success" | "error";
+type Status = "idle" | "submitting" | "success" | "error";
 
 interface AppointmentFormProps {
-  /** True when a delivery method is configured on the server. Otherwise the form runs in demo mode. */
-  live: boolean;
-  /** Contact fallback shown when sending fails. */
-  fallbackContact: ReactNode;
+  /** Contact details shown if a request can't be sent. */
+  fallbackContact?: ReactNode;
 }
 
 const initialValues = {
@@ -63,6 +61,8 @@ function todayIso() {
 
 const noopSubscribe = () => () => {};
 
+const SEND_ERROR = "Sorry, we couldn't send your request right now. Please try again in a little while.";
+
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
@@ -88,7 +88,7 @@ function Label({ htmlFor, children, optional }: { htmlFor: string; children: Rea
   );
 }
 
-export function AppointmentForm({ live, fallbackContact }: AppointmentFormProps) {
+export function AppointmentForm({ fallbackContact }: AppointmentFormProps) {
   const id = useId();
   const [values, setValues] = useState<Values>(initialValues);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -101,7 +101,7 @@ export function AppointmentForm({ live, fallbackContact }: AppointmentFormProps)
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (status === "success" || status === "demo-success") resultRef.current?.focus();
+    if (status === "success") resultRef.current?.focus();
   }, [status]);
 
   const fid = (name: string) => `${id}-${name}`;
@@ -140,12 +140,6 @@ export function AppointmentForm({ live, fallbackContact }: AppointmentFormProps)
     const data = validate();
     if (!data) return;
 
-    if (!live) {
-      // Demo mode: nothing leaves the browser.
-      setStatus("demo-success");
-      return;
-    }
-
     setStatus("submitting");
     try {
       const response = await fetch("/api/appointment-request", {
@@ -167,10 +161,11 @@ export function AppointmentForm({ live, fallbackContact }: AppointmentFormProps)
         requestAnimationFrame(() => summaryRef.current?.focus());
         return;
       }
-      setServerMessage(result?.message ?? "Something went wrong while sending your request.");
+      // One friendly message for every sending problem; visitors don't need technical details.
+      setServerMessage(SEND_ERROR);
       setStatus("error");
     } catch {
-      setServerMessage("We could not reach the server. Please check your connection and try again.");
+      setServerMessage(SEND_ERROR);
       setStatus("error");
     }
   }
@@ -182,52 +177,28 @@ export function AppointmentForm({ live, fallbackContact }: AppointmentFormProps)
     setStatus("idle");
   }
 
-  if (status === "success" || status === "demo-success") {
-    const demo = status === "demo-success";
+  if (status === "success") {
     return (
       <div
         ref={resultRef}
         tabIndex={-1}
         role="status"
         aria-live="polite"
-        className={cn(
-          "rounded-2xl border p-8 text-center focus:outline-none sm:p-10",
-          demo ? "border-amber-300 bg-amber-50" : "border-teal-200 bg-teal-50",
-        )}
+        className="rounded-2xl border border-teal-200 bg-teal-50 p-8 text-center focus:outline-none sm:p-10"
       >
-        <span
-          className={cn(
-            "mx-auto flex h-16 w-16 items-center justify-center rounded-full",
-            demo ? "bg-amber-100 text-amber-800" : "bg-teal-100 text-teal-700",
-          )}
-        >
-          {demo ? <Info className="h-8 w-8" aria-hidden="true" /> : <CheckCircle2 className="h-8 w-8" aria-hidden="true" />}
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-100 text-teal-700">
+          <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
         </span>
-        {demo ? (
-          <>
-            <h3 className="mt-6 text-2xl font-bold">Demo only: your request was not sent</h3>
-            <p className="mx-auto mt-4 max-w-md leading-relaxed text-ink">
-              Your details passed validation, but online appointment requests are not enabled on this preview yet, so no
-              information was sent or stored.
-            </p>
-            <p className="mx-auto mt-3 max-w-md text-[0.95rem] text-muted">
-              To request an appointment, please contact the practice directly.
-            </p>
-          </>
-        ) : (
-          <>
-            <h3 className="mt-6 text-2xl font-bold">Thank you — we received your request</h3>
-            <p className="mx-auto mt-4 max-w-md leading-relaxed text-ink">
-              Our team will contact you using your preferred contact method to confirm your appointment.
-            </p>
-            <p className="mx-auto mt-3 max-w-md font-semibold text-navy-900">
-              Please note: your appointment is not confirmed until the practice contacts you.
-            </p>
-          </>
-        )}
+        <h3 className="mt-6 text-2xl font-bold">Thank you — we received your request</h3>
+        <p className="mx-auto mt-4 max-w-md leading-relaxed text-ink">
+          Our team will contact you using your preferred contact method to confirm your appointment.
+        </p>
+        <p className="mx-auto mt-3 max-w-md font-semibold text-navy-900">
+          Please note: your appointment is not confirmed until the practice contacts you.
+        </p>
         <Button variant="outline" className="mt-8" onClick={reset}>
           <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          {demo ? "Start over" : "Submit another request"}
+          Submit another request
         </Button>
       </div>
     );
@@ -241,16 +212,6 @@ export function AppointmentForm({ live, fallbackContact }: AppointmentFormProps)
       <p id={`${id}-intro`} className="text-sm text-muted">
         Fields marked with <span className="text-accent-600">*</span> are required.
       </p>
-
-      {!live && (
-        <div className="flex gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-[0.95rem] text-amber-950">
-          <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
-          <p>
-            <strong>Demo mode.</strong> Online appointment requests are not enabled yet. You can try the form, but
-            nothing will be sent or stored.
-          </p>
-        </div>
-      )}
 
       {errorEntries.length > 0 && (
         <div
@@ -281,8 +242,11 @@ export function AppointmentForm({ live, fallbackContact }: AppointmentFormProps)
             <AlertCircle className="h-5 w-5" aria-hidden="true" />
             Your request was not sent.
           </p>
-          <p className="mt-2">{serverMessage} Please try again, or contact the practice directly:</p>
-          <div className="mt-2">{fallbackContact}</div>
+          <p className="mt-2">
+            {serverMessage}
+            {fallbackContact ? " You can also contact the practice directly:" : ""}
+          </p>
+          {fallbackContact && <div className="mt-2">{fallbackContact}</div>}
         </div>
       )}
 

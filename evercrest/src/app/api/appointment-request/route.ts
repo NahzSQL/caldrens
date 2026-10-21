@@ -24,7 +24,7 @@ function rateLimited(key: string): boolean {
 export async function POST(request: NextRequest) {
   if (!isDeliveryConfigured()) {
     return NextResponse.json(
-      { ok: false, code: "not_configured", message: "Online appointment requests are not enabled yet." },
+      { ok: false, code: "not_configured", message: "Unable to send request." },
       { status: 503 },
     );
   }

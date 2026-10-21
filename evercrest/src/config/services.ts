@@ -1,9 +1,6 @@
 /**
- * Proposed dental services.
- *
- * This list is proposed content. Confirm with the practice which services it
- * offers before launch, and remove or edit entries as needed. Each service
- * gets its own page at /services/<slug>.
+ * Dental services offered by the practice (confirmed).
+ * Each service gets its own page at /services/<slug>.
  */
 import type { ImageKey } from "./images";
 

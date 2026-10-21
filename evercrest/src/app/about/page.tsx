@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { Award, BookOpen, CalendarCheck, GraduationCap, MessagesSquare, ShieldCheck, UserRound, Users } from "lucide-react";
-import type { ReactNode } from "react";
+import { BookOpen, CalendarCheck, MessagesSquare, ShieldCheck, UserRound } from "lucide-react";
 import { APPOINTMENT_HREF } from "@/config/navigation";
-import { dentistDisplayName, siteConfig } from "@/config/site";
+import { siteConfig } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 import { AppointmentCta } from "@/components/sections/appointment-cta";
 import { PageHero } from "@/components/sections/page-hero";
@@ -10,7 +9,6 @@ import { ButtonLink } from "@/components/ui/button";
 import { Section } from "@/components/ui/container";
 import { Photo } from "@/components/ui/photo";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { ToBeConfirmed } from "@/components/ui/to-be-confirmed";
 
 export const metadata: Metadata = pageMetadata({
   title: "About Us",
@@ -37,34 +35,7 @@ const approach = [
   },
 ];
 
-function CredentialList({ icon, title, items, label }: { icon: ReactNode; title: string; items: string[]; label: string }) {
-  return (
-    <div className="rounded-2xl border border-line bg-white p-6">
-      <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-50 text-teal-700" aria-hidden="true">
-          {icon}
-        </span>
-        <h4 className="font-bold">{title}</h4>
-      </div>
-      {items.length ? (
-        <ul className="mt-4 space-y-2 text-muted">
-          {items.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-4">
-          <ToBeConfirmed label={label} />
-        </p>
-      )}
-    </div>
-  );
-}
-
 export default function AboutPage() {
-  const dentistName = dentistDisplayName();
-  const { dentist } = siteConfig;
-
   return (
     <>
       <PageHero
@@ -156,57 +127,6 @@ export default function AboutPage() {
                 </li>
               ))}
             </ul>
-          </div>
-        </div>
-      </Section>
-
-      {/* Dentist */}
-      <Section tone="mist" id="our-dentist" labelledBy="dentist-heading">
-        <SectionHeading
-          id="dentist-heading"
-          eyebrow="Meet Your Dentist"
-          title={dentistName ?? "Our Dentist"}
-          description={dentist.title ?? undefined}
-        />
-        <div className="mt-12 grid gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-4">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-navy-800 to-teal-700 shadow-soft">
-              {dentist.photo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={dentist.photo} alt={dentistName ?? "Portrait of the dentist"} className="h-full w-full object-cover" />
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center text-navy-100">
-                  <Users className="h-14 w-14 text-teal-200" aria-hidden="true" />
-                  <ToBeConfirmed label="Portrait photo" tone="light" />
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="lg:col-span-8">
-            <h3 className="text-xl font-bold">Biography</h3>
-            {dentist.biography ? (
-              <p className="mt-4 text-lg leading-relaxed text-muted">{dentist.biography}</p>
-            ) : (
-              <div className="mt-4 space-y-3 text-muted">
-                <p>
-                  <ToBeConfirmed label="Dentist name and biography" />
-                </p>
-                <p className="text-sm">
-                  This section will introduce the dentist, including their professional background, approach to patient
-                  care, and qualifications, once these details are confirmed by the practice.
-                </p>
-              </div>
-            )}
-            <div className="mt-8 grid gap-5 sm:grid-cols-3">
-              <CredentialList icon={<GraduationCap className="h-5 w-5" />} title="Education" items={dentist.education} label="Education" />
-              <CredentialList icon={<Award className="h-5 w-5" />} title="Licensure" items={dentist.licensure} label="Licensure" />
-              <CredentialList
-                icon={<Users className="h-5 w-5" />}
-                title="Professional Memberships"
-                items={dentist.professionalMemberships}
-                label="Memberships"
-              />
-            </div>
           </div>
         </div>
       </Section>

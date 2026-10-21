@@ -1,7 +1,6 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import type { ReactNode } from "react";
-import { hasAnyOfficeHours, siteConfig } from "@/config/site";
-import { ToBeConfirmed } from "@/components/ui/to-be-confirmed";
+import { formatHours, hasAnyOfficeHours, siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 type Tone = "dark" | "light";
@@ -26,7 +25,7 @@ function Row({ icon, label, tone, children }: { icon: ReactNode; label: string; 
   );
 }
 
-/** Address, phone, and email, read from src/config/site.ts. */
+/** Location, plus phone and email when they are set in src/config/site.ts. */
 export function ContactDetails({ tone = "dark", className }: { tone?: Tone; className?: string }) {
   const { location, contact, name } = siteConfig;
   const linkClass = cn(
@@ -39,16 +38,8 @@ export function ContactDetails({ tone = "dark", className }: { tone?: Tone; clas
       <Row icon={<MapPin className="h-5 w-5" />} label="Location" tone={tone}>
         <address className="not-italic">
           <span className="block">{name}</span>
-          {location.streetAddress ? (
-            <>
-              <span className="block">{location.streetAddress}</span>
-              {location.addressLine2 && <span className="block">{location.addressLine2}</span>}
-            </>
-          ) : (
-            <span className="my-1 block">
-              <ToBeConfirmed label="Street address" tone={tone} />
-            </span>
-          )}
+          {location.streetAddress && <span className="block">{location.streetAddress}</span>}
+          {location.addressLine2 && <span className="block">{location.addressLine2}</span>}
           <span className="block">
             {[location.city, [location.state, location.postalCode].filter(Boolean).join(" ")].filter(Boolean).join(", ")}
             {", USA"}
@@ -60,31 +51,27 @@ export function ContactDetails({ tone = "dark", className }: { tone?: Tone; clas
           </a>
         )}
       </Row>
-      <Row icon={<Phone className="h-5 w-5" />} label="Telephone" tone={tone}>
-        {contact.phone ? (
+      {contact.phone && (
+        <Row icon={<Phone className="h-5 w-5" />} label="Telephone" tone={tone}>
           <a href={`tel:${contact.phoneHref ?? contact.phone}`} className={linkClass}>
             {contact.phone}
           </a>
-        ) : (
-          <ToBeConfirmed label="Phone number" tone={tone} />
-        )}
-      </Row>
-      <Row icon={<Mail className="h-5 w-5" />} label="Email" tone={tone}>
-        {contact.email ? (
+        </Row>
+      )}
+      {contact.email && (
+        <Row icon={<Mail className="h-5 w-5" />} label="Email" tone={tone}>
           <a href={`mailto:${contact.email}`} className={cn(linkClass, "break-all")}>
             {contact.email}
           </a>
-        ) : (
-          <ToBeConfirmed label="Email address" tone={tone} />
-        )}
-      </Row>
+        </Row>
+      )}
     </ul>
   );
 }
 
-/** Weekly office hours, read from src/config/site.ts. */
+/** Weekly office hours, read from src/config/site.ts. Renders nothing if no hours are set. */
 export function OfficeHours({ tone = "dark", className, compact }: { tone?: Tone; className?: string; compact?: boolean }) {
-  const known = hasAnyOfficeHours();
+  if (!hasAnyOfficeHours()) return null;
 
   return (
     <div className={className}>
@@ -92,20 +79,14 @@ export function OfficeHours({ tone = "dark", className, compact }: { tone?: Tone
         <Clock className={cn("h-5 w-5", tone === "dark" ? "text-teal-700" : "text-teal-200")} aria-hidden="true" />
         Office Hours
       </div>
-      {known ? (
-        <dl className={cn("mt-4 divide-y", tone === "dark" ? "divide-line" : "divide-white/10", compact ? "text-sm" : "")}>
-          {siteConfig.officeHours.map(({ day, hours }) => (
-            <div key={day} className="flex justify-between gap-4 py-2">
-              <dt className={tone === "dark" ? "text-ink" : "text-navy-100"}>{day}</dt>
-              <dd className={tone === "dark" ? "text-muted" : "text-navy-200"}>{hours ?? "To be confirmed"}</dd>
-            </div>
-          ))}
-        </dl>
-      ) : (
-        <p className={cn("mt-3", tone === "dark" ? "text-muted" : "text-navy-200")}>
-          <ToBeConfirmed label="Office hours" tone={tone} />
-        </p>
-      )}
+      <dl className={cn("mt-4 divide-y", tone === "dark" ? "divide-line" : "divide-white/10", compact ? "text-sm" : "")}>
+        {siteConfig.officeHours.map((entry) => (
+          <div key={entry.day} className="flex justify-between gap-4 py-2">
+            <dt className={tone === "dark" ? "text-ink" : "text-navy-100"}>{entry.day}</dt>
+            <dd className={tone === "dark" ? "text-muted" : "text-navy-200"}>{formatHours(entry)}</dd>
+          </div>
+        ))}
+      </dl>
       {siteConfig.officeHoursNote && (
         <p className={cn("mt-3 text-sm", tone === "dark" ? "text-muted" : "text-navy-200")}>{siteConfig.officeHoursNote}</p>
       )}

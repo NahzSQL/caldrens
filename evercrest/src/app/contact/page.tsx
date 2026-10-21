@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
-import { CalendarClock, ExternalLink, Lock, MapPin, ShieldAlert } from "lucide-react";
-import { hasFullAddress, siteConfig } from "@/config/site";
-import { isDeliveryConfigured } from "@/lib/appointment-delivery";
+import { CalendarClock, ExternalLink, Lock, ShieldAlert } from "lucide-react";
+import { siteConfig } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 import { AppointmentForm } from "@/components/appointment-form";
 import { ContactDetails, OfficeHours } from "@/components/contact-info";
 import { PageHero } from "@/components/sections/page-hero";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { ToBeConfirmed } from "@/components/ui/to-be-confirmed";
 
 export const metadata: Metadata = pageMetadata({
   title: "Contact and Appointments",
@@ -19,9 +17,6 @@ export const metadata: Metadata = pageMetadata({
 
 function FallbackContact() {
   const { contact } = siteConfig;
-  if (!contact.phone && !contact.email) {
-    return <span className="text-[0.95rem]">Contact details will be listed on this page once confirmed.</span>;
-  }
   return (
     <ul className="space-y-1">
       {contact.phone && (
@@ -45,8 +40,7 @@ function FallbackContact() {
 }
 
 export default function ContactPage() {
-  const live = isDeliveryConfigured();
-  const { location, practiceManagement } = siteConfig;
+  const { practiceManagement } = siteConfig;
 
   return (
     <>
@@ -94,7 +88,7 @@ export default function ContactPage() {
               )}
 
               <div className="mt-8">
-                <AppointmentForm live={live} fallbackContact={<FallbackContact />} />
+                <AppointmentForm fallbackContact={siteConfig.contact.phone || siteConfig.contact.email ? <FallbackContact /> : null} />
               </div>
 
               <div className="mt-10 space-y-4 border-t border-line pt-8 text-sm leading-relaxed text-muted">
@@ -120,37 +114,10 @@ export default function ContactPage() {
             <aside className="space-y-6 lg:col-span-5" aria-label="Practice contact information">
               <div className="rounded-3xl bg-navy-900 p-8 text-white shadow-soft sm:p-10">
                 <h2 className="text-2xl font-bold text-white">{siteConfig.name}</h2>
-                <p className="mt-2 flex items-center gap-2 text-navy-200">
-                  <MapPin className="h-4 w-4 text-teal-300" aria-hidden="true" />
-                  {location.state}, USA
-                </p>
                 <ContactDetails tone="light" className="mt-8" />
               </div>
               <div className="rounded-3xl border border-line bg-white p-8 shadow-soft">
                 <OfficeHours />
-              </div>
-              <div className="overflow-hidden rounded-3xl border border-line bg-white shadow-soft">
-                {location.mapEmbedUrl && hasFullAddress() ? (
-                  <iframe
-                    title={`Map showing the location of ${siteConfig.name}`}
-                    src={location.mapEmbedUrl}
-                    className="block h-72 w-full border-0"
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    allowFullScreen
-                  />
-                ) : (
-                  <div className="flex h-64 flex-col items-center justify-center gap-3 bg-[radial-gradient(circle_at_center,var(--color-teal-50),var(--color-mist))] p-6 text-center">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white text-teal-700 shadow-soft">
-                      <MapPin className="h-6 w-6" aria-hidden="true" />
-                    </span>
-                    <p className="font-semibold text-navy-900">Map</p>
-                    <p className="text-sm text-muted">
-                      A map will appear here once the street address is confirmed.
-                    </p>
-                    <ToBeConfirmed label="Street address" />
-                  </div>
-                )}
               </div>
             </aside>
           </div>

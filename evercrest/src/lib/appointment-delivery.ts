@@ -19,8 +19,8 @@ import {
  *    communication service.
  * 2. Email via Resend: RESEND_API_KEY, APPOINTMENT_EMAIL_TO, APPOINTMENT_EMAIL_FROM.
  *
- * If neither is configured, the site runs the form in demo mode and nothing
- * is sent.
+ * If neither is configured, nothing is sent: the endpoint returns an error and
+ * the visitor sees a general "couldn't send your request" message.
  *
  * IMPORTANT: Appointment requests may count as protected health information.
  * Before enabling delivery, confirm the provider is appropriate for healthcare

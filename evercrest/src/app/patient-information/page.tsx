@@ -21,7 +21,6 @@ import { AppointmentCta } from "@/components/sections/appointment-cta";
 import { PageHero } from "@/components/sections/page-hero";
 import { ButtonLink } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { ToBeConfirmed } from "@/components/ui/to-be-confirmed";
 
 export const metadata: Metadata = pageMetadata({
   title: "Patient Information",
@@ -161,12 +160,7 @@ export default function PatientInformationPage() {
                     at any time.
                   </li>
                   <li>
-                    {policies.lateArrival ?? (
-                      <>
-                        If you are running late, please contact the office as soon as possible. Late arrival policy:{" "}
-                        <ToBeConfirmed label="Policy" />
-                      </>
-                    )}
+                    {policies.lateArrival ?? "If you are running late, please contact the office as soon as possible."}
                   </li>
                 </ul>
                 <Notice>
@@ -206,29 +200,29 @@ export default function PatientInformationPage() {
                 <div className="mt-6 grid gap-5 md:grid-cols-2">
                   <div className="rounded-2xl border border-line p-6">
                     <h3 className="text-lg font-bold">Dental insurance</h3>
-                    {insurance.acceptedPlans.length ? (
+                    {insurance.acceptsInsurance && (
+                      <p className="mt-3 flex gap-2 font-medium text-ink">
+                        <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-teal-600" aria-hidden="true" />
+                        We accept dental insurance.
+                      </p>
+                    )}
+                    {insurance.acceptedPlans.length > 0 && (
                       <ul className="mt-3 list-disc space-y-1 pl-5">
                         {insurance.acceptedPlans.map((plan) => (
                           <li key={plan}>{plan}</li>
                         ))}
                       </ul>
-                    ) : (
-                      <div className="mt-3 space-y-3">
-                        <p>
-                          <ToBeConfirmed label="Accepted insurance plans" />
-                        </p>
-                        <p className="text-[0.95rem]">
-                          Please contact the office to ask about your specific plan before your appointment.
-                        </p>
-                      </div>
                     )}
+                    <p className="mt-3 text-[0.95rem]">
+                      Please contact the office before your appointment so we can help verify your coverage.
+                    </p>
                     <p className="mt-4 text-[0.95rem]">
                       Coverage varies by plan. We recommend checking your benefits with your insurance provider.
                     </p>
                   </div>
                   <div className="rounded-2xl border border-line p-6">
                     <h3 className="text-lg font-bold">Payment options</h3>
-                    {insurance.paymentMethods.length ? (
+                    {insurance.paymentMethods.length > 0 ? (
                       <ul className="mt-3 list-disc space-y-1 pl-5">
                         {insurance.paymentMethods.map((method) => (
                           <li key={method}>{method}</li>
@@ -236,12 +230,11 @@ export default function PatientInformationPage() {
                       </ul>
                     ) : (
                       <p className="mt-3">
-                        <ToBeConfirmed label="Accepted payment methods" />
+                        Our team will review your estimated costs and the payment options available to you before
+                        treatment begins.
                       </p>
                     )}
-                    <p className="mt-4 text-[0.95rem]">
-                      {insurance.financingNote ?? <ToBeConfirmed label="Financing and payment plan information" />}
-                    </p>
+                    {insurance.financingNote && <p className="mt-4 text-[0.95rem]">{insurance.financingNote}</p>}
                   </div>
                 </div>
               </InfoSection>
@@ -260,25 +253,10 @@ export default function PatientInformationPage() {
                     </ButtonLink>
                   </>
                 ) : (
-                  <>
-                    <p>
-                      New patients are typically asked to complete registration, medical history, and consent forms.
-                      Online patient forms will be available here once they are set up.
-                    </p>
-                    <div className="mt-6 rounded-2xl border border-dashed border-navy-200 bg-navy-50/50 p-6">
-                      <p className="flex items-center gap-2 font-semibold text-navy-900">
-                        <FileText className="h-5 w-5 text-teal-700" aria-hidden="true" />
-                        Online patient forms
-                      </p>
-                      <p className="mt-2">
-                        <ToBeConfirmed label="Forms link" />
-                      </p>
-                      <p className="mt-3 text-[0.95rem]">
-                        Until then, our team will let you know how to complete your forms when your appointment is
-                        confirmed.
-                      </p>
-                    </div>
-                  </>
+                  <p>
+                    New patients are typically asked to complete registration, medical history, and consent forms. Our
+                    team will let you know how to complete your forms when your appointment is confirmed.
+                  </p>
                 )}
                 <div className="mt-6 flex gap-3 rounded-xl bg-mist p-5 text-[0.95rem]">
                   <Lock className="mt-0.5 h-5 w-5 shrink-0 text-navy-700" aria-hidden="true" />
@@ -295,10 +273,12 @@ export default function PatientInformationPage() {
                   If you need to cancel or reschedule, please let us know as early as possible so we can offer your time
                   to another patient.
                 </p>
-                <div className="mt-6 rounded-2xl border border-line p-6">
-                  <h3 className="text-lg font-bold">Our policy</h3>
-                  <p className="mt-3">{policies.cancellation ?? <ToBeConfirmed label="Cancellation policy" />}</p>
-                </div>
+                {policies.cancellation && (
+                  <div className="mt-6 rounded-2xl border border-line p-6">
+                    <h3 className="text-lg font-bold">Our policy</h3>
+                    <p className="mt-3">{policies.cancellation}</p>
+                  </div>
+                )}
                 <p className="mt-6">
                   To cancel or reschedule,{" "}
                   {contact.phone ? (

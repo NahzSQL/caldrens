@@ -60,7 +60,7 @@ export default function ServicesPage() {
           <div className="lg:col-span-9">
             <SectionHeading
               id="all-services-heading"
-              title="Our Proposed Services"
+              title="Our Services"
               description="Select a service to learn what it involves, who may benefit, and what to expect."
             />
             <ul className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -78,11 +78,11 @@ export default function ServicesPage() {
                   or professional advice. Treatment recommendations depend on each patient&apos;s individual needs.
                 </p>
                 <p className="mt-2">
-                  Please{" "}
+                  Have a question about a service?{" "}
                   <Link href="/contact" className="font-semibold text-teal-800 underline underline-offset-4">
-                    contact the practice
-                  </Link>{" "}
-                  to confirm the availability of specific services.
+                    Contact us
+                  </Link>
+                  .
                 </p>
               </div>
             </div>

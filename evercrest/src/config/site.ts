@@ -2,9 +2,8 @@
  * Evercrest Dental Practice — central business configuration.
  *
  * Every practice detail shown on the website comes from this file.
- * Fields set to `null` (or empty lists) are NOT yet verified. The site shows a
- * clear "to be confirmed" placeholder for them and leaves them out of search
- * metadata and structured data.
+ * Optional fields set to `null` (or empty lists) are simply not shown on the
+ * site, and are left out of search metadata and structured data.
  *
  * When a detail is confirmed, fill it in here and the whole site updates.
  * Do not enter details that have not been verified by the practice.
@@ -21,8 +20,10 @@ export type Weekday =
 
 export interface OfficeHoursEntry {
   day: Weekday;
-  /** e.g. "8:00 AM – 5:00 PM", "Closed", or null while unconfirmed. */
-  hours: string | null;
+  /** Opening time in 24-hour format, e.g. "09:00". Null when closed. */
+  opens: string | null;
+  /** Closing time in 24-hour format, e.g. "17:00". Null when closed. */
+  closes: string | null;
 }
 
 export interface SocialLink {
@@ -46,8 +47,6 @@ export interface SiteConfig {
     /** Suite, unit, or floor. */
     addressLine2: string | null;
     postalCode: string | null;
-    /** Optional map embed URL (e.g. Google Maps "Embed a map" src). Only set once the street address is verified. */
-    mapEmbedUrl: string | null;
     /** Optional link to directions (e.g. a Google Maps place link). */
     mapLink: string | null;
   };
@@ -62,18 +61,6 @@ export interface SiteConfig {
   officeHours: OfficeHoursEntry[];
   /** Optional note shown under office hours, e.g. holiday closures. */
   officeHoursNote: string | null;
-  dentist: {
-    name: string | null;
-    /** e.g. "DDS" or "DMD". */
-    degree: string | null;
-    title: string | null;
-    biography: string | null;
-    education: string[];
-    licensure: string[];
-    professionalMemberships: string[];
-    /** Path or URL of a portrait photo. */
-    photo: string | null;
-  };
   /** Practice management software. Used for optional patient-facing links. */
   practiceManagement: {
     system: string;
@@ -83,7 +70,9 @@ export interface SiteConfig {
     patientFormsUrl: string | null;
   };
   insurance: {
-    /** Plans the practice has confirmed it accepts or is in-network with. Leave empty until verified. */
+    /** Whether the practice accepts dental insurance. */
+    acceptsInsurance: boolean;
+    /** Optional list of specific plans, if the practice wants to name them. */
     acceptedPlans: string[];
     /** Confirmed payment methods, e.g. ["Cash", "Visa", "Mastercard"]. */
     paymentMethods: string[];
@@ -114,41 +103,31 @@ export const siteConfig: SiteConfig = {
     streetAddress: null,
     addressLine2: null,
     postalCode: null,
-    mapEmbedUrl: null,
     mapLink: null,
   },
   contact: {
-    phone: null,
-    phoneHref: null,
-    email: null,
+    phone: "(251) 520-4334",
+    phoneHref: "+12515204334",
+    email: "wellsmuffle@evercrest.fit",
     fax: null,
   },
   officeHours: [
-    { day: "Monday", hours: null },
-    { day: "Tuesday", hours: null },
-    { day: "Wednesday", hours: null },
-    { day: "Thursday", hours: null },
-    { day: "Friday", hours: null },
-    { day: "Saturday", hours: null },
-    { day: "Sunday", hours: null },
+    { day: "Monday", opens: "09:00", closes: "17:00" },
+    { day: "Tuesday", opens: "09:00", closes: "17:00" },
+    { day: "Wednesday", opens: "09:00", closes: "17:00" },
+    { day: "Thursday", opens: "09:00", closes: "17:00" },
+    { day: "Friday", opens: "09:00", closes: "17:00" },
+    { day: "Saturday", opens: null, closes: null },
+    { day: "Sunday", opens: null, closes: null },
   ],
   officeHoursNote: null,
-  dentist: {
-    name: null,
-    degree: null,
-    title: null,
-    biography: null,
-    education: [],
-    licensure: [],
-    professionalMemberships: [],
-    photo: null,
-  },
   practiceManagement: {
     system: "Dentrix Ascend",
     onlineSchedulingUrl: null,
     patientFormsUrl: null,
   },
   insurance: {
+    acceptsInsurance: true,
     acceptedPlans: [],
     paymentMethods: [],
     financingNote: null,
@@ -175,13 +154,21 @@ export function hasFullAddress(config: SiteConfig = siteConfig): boolean {
 }
 
 export function hasAnyOfficeHours(config: SiteConfig = siteConfig): boolean {
-  return config.officeHours.some((entry) => entry.hours);
+  return config.officeHours.some((entry) => entry.opens && entry.closes);
 }
 
-export function dentistDisplayName(config: SiteConfig = siteConfig): string | null {
-  const { name, degree } = config.dentist;
-  if (!name) return null;
-  return degree ? `${name}, ${degree}` : name;
+/** "09:00" -> "9:00 AM" */
+function formatTime(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const suffix = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
+}
+
+/** "9:00 AM – 5:00 PM" or "Closed". */
+export function formatHours(entry: OfficeHoursEntry): string {
+  if (!entry.opens || !entry.closes) return "Closed";
+  return `${formatTime(entry.opens)} – ${formatTime(entry.closes)}`;
 }
 
 /** Absolute URL for a path, or null if the site URL is not configured yet. */

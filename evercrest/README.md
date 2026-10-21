@@ -33,11 +33,11 @@ Also generated: `sitemap.xml`, `robots.txt`, `manifest.webmanifest`, favicon (`s
 
 ## Updating practice details
 
-**All practice details live in [`src/config/site.ts`](src/config/site.ts).** Anything set to `null` (or an empty list) shows on the site as a dashed "… to be confirmed" placeholder, and is left out of search metadata and structured data. Fill in a field and every page that uses it updates.
+**All practice details live in [`src/config/site.ts`](src/config/site.ts).** Optional details set to `null` (or an empty list) are simply not shown, and are left out of search metadata and structured data. Fill in a field and every page that uses it updates.
 
 | What | Where |
 | --- | --- |
-| Address, city, ZIP, map | `siteConfig.location` |
+| Address, city, ZIP | `siteConfig.location` |
 | Phone, email | `siteConfig.contact` |
 | Office hours | `siteConfig.officeHours` |
 | Dentist name, biography, education, licensure, photo | `siteConfig.dentist` |
@@ -50,23 +50,11 @@ Also generated: `sitemap.xml`, `robots.txt`, `manifest.webmanifest`, favicon (`s
 | Photos | [`src/config/images.ts`](src/config/images.ts) |
 | Navigation | [`src/config/navigation.ts`](src/config/navigation.ts) |
 
-### Placeholders still to confirm
+### Confirmed details
 
-None of the following has been verified, so none of it is on the site yet:
+See **[CONFIRMATION-CHECKLIST.md](CONFIRMATION-CHECKLIST.md)** for the practice's decisions on each detail, and the optional details that can be added later.
 
-- Street address, city, ZIP code (and the map, which appears once the full address and `mapEmbedUrl` are set)
-- Telephone number and email address
-- Office hours
-- Dentist's name, degree, biography, education, licensure, memberships, and portrait
-- Accepted insurance plans, payment methods, and financing options
-- Cancellation and late-arrival policies
-- Online scheduling and patient forms links (if the practice enables these in Dentrix Ascend)
-- Social media accounts
-- The website's domain (`siteConfig.url`)
-- The Privacy Policy's effective date, plus a legal review of the policy
-- Which of the eight proposed services the practice offers (edit `src/config/services.ts`)
-
-Once the city and address are confirmed, update `siteConfig.location`. The contact details, footer, map, structured data (schema.org `Dentist`), and page metadata all pick them up automatically. Consider adding the city to the page descriptions in each `page.tsx` too.
+Once the city and address are confirmed, update `siteConfig.location`. The contact details, footer, structured data (schema.org `Dentist`), and page metadata all pick them up automatically. Consider adding the city to the page descriptions in each `page.tsx` too.
 
 ## Photography
 
@@ -81,7 +69,7 @@ Every photo sits on a branded navy and teal background with the Evercrest crest.
 The form collects only what is needed to schedule a visit: the patient's name, preferred contact method, phone and/or email, preferred date and time, a general reason chosen from a list, and an optional scheduling note. It does not ask for medical history or insurance details, and it tells visitors not to include them.
 
 - Validation runs in the browser and again on the server (`src/lib/appointment-schema.ts`), with accessible error messages and an error summary.
-- **Demo mode (default).** With no delivery configured, a banner says the form is a demo. On submit it says plainly that nothing was sent, and no data leaves the browser.
+- **Delivery must be set up for requests to reach the practice.** The form always looks and works like a normal form. Until delivery is configured, every submission gets a general "Sorry, we couldn't send your request right now" message. Visitors are never told a request was received unless it was actually delivered.
 - **Live mode.** Set the environment variables in `.env.example`. The form then posts to `src/app/api/appointment-request/route.ts`, which validates the request, applies a basic rate limit and a spam honeypot, and delivers it by webhook or by email through Resend. Patient details are never written to logs. The visitor sees a confirmation only after delivery succeeds, and it says the practice must still confirm the appointment. If delivery fails, the visitor is told the request was **not** sent.
 
 Whether the form is live is decided when the site is **built**, so set the environment variables before running `npm run build` (on Vercel, add them in Project Settings, then redeploy).

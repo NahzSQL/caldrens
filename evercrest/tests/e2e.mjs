@@ -189,11 +189,13 @@ console.log("Appointment form");
   const outcome = form.getByRole("status").or(form.getByRole("alert").filter({ hasText: "not sent" }));
   await outcome.first().waitFor({ timeout: 15000 }).catch(() => {});
   const text = (await outcome.first().textContent().catch(() => "")) ?? "";
-  if (/demo only/i.test(text)) pass("demo mode reports that nothing was sent");
-  else if (/received your request/i.test(text)) pass("live mode shows confirmation");
-  else if (/request was not sent/i.test(text)) {
-    // Delivery failed: the visitor must be told clearly. Expected only when EXPECT_DELIVERY_FAILURE=1.
-    check(process.env.EXPECT_DELIVERY_FAILURE === "1", "failed delivery is reported as not sent", "delivery failed unexpectedly");
+  // Set EXPECT_DELIVERY=1 when the server has request delivery configured.
+  const expectDelivery = process.env.EXPECT_DELIVERY === "1";
+  if (/received your request/i.test(text)) {
+    check(expectDelivery, "delivered request shows confirmation", "confirmation shown although delivery was not expected");
+  } else if (/request was not sent/i.test(text)) {
+    check(!expectDelivery, "undelivered request is reported as not sent", "delivery failed unexpectedly");
+    check(!/demo|not available|coming soon|configur/i.test(text), "error message reveals no backend status", `error message: ${text}`);
   } else fail(`unexpected result: ${text.slice(0, 120)}`);
   await context.close();
 }

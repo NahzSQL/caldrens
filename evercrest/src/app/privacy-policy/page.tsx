@@ -4,7 +4,6 @@ import { siteConfig } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 import { SimplePageHero } from "@/components/sections/simple-page-hero";
 import { Container } from "@/components/ui/container";
-import { ToBeConfirmed } from "@/components/ui/to-be-confirmed";
 
 export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy",
@@ -23,9 +22,8 @@ export default function PrivacyPolicyPage() {
       />
       <Container className="py-16 sm:py-20">
         <article className="prose-evercrest mx-auto max-w-3xl">
-          <p className="rounded-xl border border-dashed border-navy-200 bg-navy-50/60 p-4 text-sm not-italic">
-            <strong>Effective date:</strong> <ToBeConfirmed label="Effective date" />. This policy describes the
-            practice&apos;s website only. It should be reviewed by the practice and its legal advisor before launch.
+          <p className="text-sm">
+            <strong>Last updated:</strong> October 2026
           </p>
 
           <h2>Overview</h2>
@@ -99,7 +97,7 @@ export default function PrivacyPolicyPage() {
           </p>
 
           <h2>Changes to this policy</h2>
-          <p>We may update this policy from time to time. The effective date above shows when it was last revised.</p>
+          <p>We may update this policy from time to time. The date above shows when it was last revised.</p>
         </article>
       </Container>
     </>

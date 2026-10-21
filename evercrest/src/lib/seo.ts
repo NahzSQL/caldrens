@@ -27,16 +27,6 @@ export function pageMetadata({
   };
 }
 
-const dayCodes: Record<string, string> = {
-  Monday: "Mo",
-  Tuesday: "Tu",
-  Wednesday: "We",
-  Thursday: "Th",
-  Friday: "Fr",
-  Saturday: "Sa",
-  Sunday: "Su",
-};
-
 /**
  * schema.org structured data for the practice.
  * Only verified details from src/config/site.ts are included.
@@ -68,9 +58,14 @@ export function practiceJsonLd(): Record<string, unknown> {
   if (contact.phone) data.telephone = contact.phoneHref ?? contact.phone;
   if (contact.email) data.email = contact.email;
   if (hasAnyOfficeHours()) {
-    data.openingHours = siteConfig.officeHours
-      .filter((entry) => entry.hours && !/closed/i.test(entry.hours))
-      .map((entry) => `${dayCodes[entry.day]} ${entry.hours}`);
+    data.openingHoursSpecification = siteConfig.officeHours
+      .filter((entry) => entry.opens && entry.closes)
+      .map((entry) => ({
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: `https://schema.org/${entry.day}`,
+        opens: entry.opens,
+        closes: entry.closes,
+      }));
   }
   if (siteConfig.social.length) data.sameAs = siteConfig.social.map((s) => s.href);
   return data;

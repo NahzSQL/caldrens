@@ -219,9 +219,6 @@ export default function HomePage() {
             </li>
           ))}
         </ul>
-        <p className="mt-10 text-center text-sm text-muted">
-          Please contact the practice to confirm the availability of specific services.
-        </p>
       </Section>
 
       {/* Why choose Evercrest */}
