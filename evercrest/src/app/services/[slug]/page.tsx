@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, CalendarCheck, CheckCircle2, ClipboardList, Stethoscope, Users } from "lucide-react";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { APPOINTMENT_HREF } from "@/config/navigation";
 import { getService, services } from "@/config/services";
 import { pageMetadata } from "@/lib/seo";
@@ -51,7 +51,39 @@ function DetailBlock({ id, icon, title, items }: { id: string; icon: ReactNode; 
   );
 }
 
-export default async function ServicePage({ params }: PageProps<"/services/[slug]">) {
+export default function ServicePage({ params }: PageProps<"/services/[slug]">) {
+  return (
+    <Suspense fallback={<ServicePageSkeleton />}>
+      <ServiceContent params={params} />
+    </Suspense>
+  );
+}
+
+/** Shown briefly while a service page loads. */
+function ServicePageSkeleton() {
+  return (
+    <div role="status" aria-label="Loading service" className="animate-pulse">
+      <div className="bg-navy-900">
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+          <div className="h-4 w-48 rounded bg-white/10" />
+          <div className="mt-8 h-12 w-2/3 max-w-lg rounded bg-white/15" />
+          <div className="mt-6 h-5 w-full max-w-xl rounded bg-white/10" />
+        </div>
+      </div>
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-20 sm:px-6 lg:grid-cols-12 lg:px-8">
+        <div className="space-y-6 lg:col-span-8">
+          <div className="h-6 w-full rounded bg-mist" />
+          <div className="h-6 w-5/6 rounded bg-mist" />
+          <div className="h-56 rounded-2xl bg-mist" />
+        </div>
+        <div className="hidden h-72 rounded-2xl bg-mist lg:col-span-4 lg:block" />
+      </div>
+      <span className="sr-only">Loading…</span>
+    </div>
+  );
+}
+
+async function ServiceContent({ params }: { params: PageProps<"/services/[slug]">["params"] }) {
   const { slug } = await params;
   const service = getService(slug);
   if (!service) notFound();
