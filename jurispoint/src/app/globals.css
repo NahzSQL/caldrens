@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-ivory font-sans text-ink antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    @apply font-serif text-navy-900;
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
+  ::selection { @apply bg-gold-300/60 text-navy-950; }
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold-500 ring-offset-2 ring-offset-ivory;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply inline-flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.2em] text-gold-600;
+  }
+  .eyebrow::before {
+    content: "";
+    @apply h-px w-8 bg-gold-500;
+  }
+  .eyebrow-light { @apply text-gold-300; }
+  .eyebrow-light::before { @apply bg-gold-400; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm px-6 py-3.5 text-sm font-semibold tracking-wide transition duration-200 ease-out;
+  }
+  .btn-primary {
+    @apply btn bg-navy-900 text-white shadow-card hover:-translate-y-0.5 hover:bg-navy-700 hover:shadow-lift;
+  }
+  .btn-gold {
+    @apply btn bg-gold-500 text-navy-950 hover:-translate-y-0.5 hover:bg-gold-400 hover:shadow-lift;
+  }
+  .btn-outline {
+    @apply btn border border-navy-900/25 text-navy-900 hover:border-navy-900 hover:bg-navy-900 hover:text-white;
+  }
+  .btn-outline-light {
+    @apply btn border border-white/35 text-white hover:border-white hover:bg-white hover:text-navy-900;
+  }
+  .link-arrow {
+    @apply inline-flex items-center gap-2 text-sm font-semibold text-navy-800 underline-offset-4 transition-colors hover:text-gold-600 hover:underline;
+  }
+  .on-dark :focus-visible { @apply ring-offset-navy-900; }
+
+  /* Fine architectural line pattern used behind photography and on dark panels. */
+  .pattern-lines {
+    background-image: repeating-linear-gradient(135deg, rgba(201, 171, 110, 0.07) 0 1px, transparent 1px 18px);
+  }
+}
